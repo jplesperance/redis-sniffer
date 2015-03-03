@@ -2,7 +2,7 @@
 
 ## About
 
-This sniffer is based on http://github.com/xupeng/tedis-sa
+This sniffer is based on http://github.com/xupeng/redis-sa
 
 This tool will monitor a specific port and interface for redis traffic and captures the commands being sent to Redis and/or formatted full TCP dump data.  This can be used for analysis for debugging or for replaying the transactions as a way of doing real load/performance testing.
 
