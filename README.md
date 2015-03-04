@@ -57,11 +57,9 @@ Since the setup script will create an egg file, it will be installed as a pip mo
 sudo redis-sniffer -i <interface> -p <port>
 ```
 Additional Options:
-
+```bash
 -l {event,full,both} - logging type
-
 --out - location to write logs
-
 --event-log - name of the event log
-
 --full-log - name of the full log
+```
