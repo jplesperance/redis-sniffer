@@ -43,8 +43,8 @@ sudo apt-get install -y redis-sniffer
 ### Get the source and install
 
 ```bash
-git clone https://github.com/jplesperance/redis-sa.git
-cd redis-sa
+git clone https://github.com/eternalprojects/redis-sniffer.git
+cd redis-sniffer
 sudo python setup.py install
 sudo python setup.py install --user
 ```
@@ -57,7 +57,8 @@ Since the setup script will create an egg file, it will be installed as a pip mo
 sudo redis-sniffer -i <interface> -p <port>
 ```
 Additional Options:
---log {event,full,both} - Logging type
---out  - Location to write logs
+
+-l {event,full,both} - logging type
+--out - location to write logs
 --event-log - name of the event log
 --full-log - name of the full log
