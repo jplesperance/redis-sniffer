@@ -20,6 +20,26 @@ pip install pypcap
 ```
 2. dpkt - Installed as part of the build process
 
+### Install from Pypi
+```bash
+sudo pip install redis-sniffer
+```
+
+### Install from Apt
+1. Get the key for the repo
+```bash
+wget -O - http://apt.eternalprojects.com/conf/apt.eternalprojects.com.gpg.key|apt-key add -
+```
+2. Add the Repo to /etc/apt/sources.list
+```bash
+deb http://apt.eternalprojects.com/ stable main
+```
+3. Install the package
+```bash
+sudo apt-get update
+sudo apt-get install -y redis-sniffer
+```
+
 ### Get the source and install
 
 ```bash
@@ -30,13 +50,14 @@ sudo python setup.py install --user
 ```
 Since the setup script will create an egg file, it will be installed as a pip module
 
-### Usage
+## Usage
 
 **Please Note: Redis Sniffer must be run as root/sudo since it has to bind to a network interface which is not allowed by non-privileged users.**
 ```bash
-sudo redis-sa -i <interface> -p <port>
+sudo redis-sniffer -i <interface> -p <port>
 ```
-
-The captured Redis traffic will be logged to 2 different files
-1. full_output - This will be a formatted version of the pcap data that includes: process time, the client, request size, response size and the command
-2. comm_output - This is just a list of all the Redis commands captured by Redis Sniffer.  Each line in this file could be replayed without modification for simulated load testing/performance testing/tuning
+Additional Options:
+--log {event,full,both} - Logging type
+--out  - Location to write logs
+--event-log - name of the event log
+--full-log - name of the full log
