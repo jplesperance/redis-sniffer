@@ -59,6 +59,9 @@ sudo redis-sniffer -i <interface> -p <port>
 Additional Options:
 
 -l {event,full,both} - logging type
+
 --out - location to write logs
+
 --event-log - name of the event log
+
 --full-log - name of the full log
