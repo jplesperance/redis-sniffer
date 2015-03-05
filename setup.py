@@ -1,7 +1,7 @@
 from setuptools import setup, find_packages
-import sys, os
+import sys
 
-version = '1.0.0'
+version = '1.0.1'
 
 install_requires = [
     'pypcap',
@@ -21,7 +21,7 @@ setup(name='redis-sniffer',
       keywords='',
       author='Jesse Lesperance',
       author_email='jesse@jplesperance.me',
-      url='https://github.com/jplesperance/redis-sniffer',
+      url='https://github.com/eternalprojects/redis-sniffer',
       license='MIT',
       packages=find_packages(exclude=['ez_setup', 'examples', 'tests']),
       include_package_data=True,
@@ -32,8 +32,4 @@ setup(name='redis-sniffer',
               'redis-sniffer = redis_sniffer.sniffer:main',
           ],
       },
-      dependency_links=[
-          'http://github.com/xupeng/pypcap.git',
-          'http://dpkt.googlecode.com/files/dpkt-1.7.tar.gz#egg=dpkt-1.7',
-      ]
       )

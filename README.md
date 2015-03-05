@@ -9,21 +9,7 @@ This tool will monitor a specific port and interface for redis traffic and captu
 Redis Sniffer must be run locally on a Redis server.
 
 ## Installation
-
-### Dependencies
-
-There are 2 dependencies for Redis Sniffer
-1. pypcap - This will need to be installed globally and for the current user if desired
-```bash
-sudo pip install pypcap
-pip install pypcap
-```
-2. dpkt - Installed as part of the build process
-
-### Install from Pypi
-```bash
-sudo pip install redis-sniffer
-```
+Installing from the Eternal Projects Apt repo is the preffered method of installation since it handles installing all the needed dependecies.
 
 ### Install from Apt
 1. Get the key for the repo
@@ -38,6 +24,14 @@ deb http://apt.eternalprojects.com/ stable main
 ```bash
 sudo apt-get update
 sudo apt-get install -y redis-sniffer
+```
+
+### Install from Pypi
+```bash
+sudo apt-get -y libpcap-dev
+sudo pip install pypcap
+sudo pip install dpkt
+sudo pip install redis-sniffer
 ```
 
 ### Get the source and install
