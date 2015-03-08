@@ -55,3 +55,6 @@ target/
 
 # PyCharm
 .idea
+.pybuild/
+redis_sniffer/event_sniff
+redis_sniffer/full_sniff
