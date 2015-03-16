@@ -7,8 +7,8 @@ import re
 import socket
 from collections import defaultdict
 import pcap
-
 import dpkt
+from log import Log
 
 
 class Sniffer:
@@ -19,7 +19,7 @@ class Sniffer:
         return
 
     @staticmethod
-    def sniff(interface, port=6379, src_ip=None, dst_ip=None):
+    def sniff(interface, port=6379, src_ip=None, dst_ip=None, debug=False):
 
         pc = pcap.pcap(interface)
         _filter = 'tcp port %s' % port
@@ -28,30 +28,43 @@ class Sniffer:
         if dst_ip:
             _filter += ' and dst %s' % dst_ip
         pc.setfilter(_filter)
-
+        if debug:
+            logger = Log('debug', "./", {'debug': 'rs_debug'})
         receiving = False
         receiving_partials = {}
         request_sizes = defaultdict(int)
         sessions = {}
+        if debug:
+            logger.write_debug("<=============== Checking for Ethernet Packets ==============>")
         for ptime, pdata in pc:
             ether_pkt = dpkt.ethernet.Ethernet(pdata)
             ip_pkt = ether_pkt.data
             tcp_pkt = ip_pkt.data
             tcp_data = tcp_pkt.data
-
+            if debug:
+                logger.write_debug("Checking the length of the tcp packet")
             if len(tcp_data) == 0:
+                if debug:
+                    logger.write_debug("TCP Packet is empty")
                 continue
-
+            if debug:
+                logger.write_debug("TCP Packet has data")
             src = socket.inet_ntoa(ip_pkt.src)
             sport = tcp_pkt.sport
             dst = socket.inet_ntoa(ip_pkt.dst)
             dport = tcp_pkt.dport
             src_addr = '%s:%s' % (src, sport)
             dst_addr = '%s:%s' % (dst, dport)
+            if debug:
+                logger.write_debug("Checking to see if the data is being sent or received")
             if sport == port:
+                if debug:
+                    logger.write_debug("Data is being sent")
                 receiving = False
                 client = dst_addr
             else:
+                if debug:
+                    logger.write_debug("Data is being received")
                 receiving = True
                 client = src_addr
 
@@ -65,7 +78,12 @@ class Sniffer:
                 request_sizes[client] += len(pdata)
                 request_size = request_sizes[client]
                 n_parts = len(_parts)
-                n_args = int(_parts[0][1:])
+                if debug:
+                    logger.write_debug("Check to ensure the packets contain valid redis commands")
+                try:
+                    n_args = int(_parts[0][1:])
+                except ValueError:
+                    continue
                 if (n_args * 2 + 1) == n_parts and int(_parts[-2][1:]) == len(_parts[-1]):
                     # Complete normal command
                     command = ' '.join([c for (i, c) in enumerate(_parts[1:]) if i % 2 == 1])

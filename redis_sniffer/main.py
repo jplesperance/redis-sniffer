@@ -1,6 +1,7 @@
 import argparse
-import logging
+import io
 from sniffer import Sniffer
+from log import Log
 
 
 def main():
@@ -21,34 +22,22 @@ def main():
     fmt_full = '%.6f %-21s %8d %8d %s\n'
     fmt = '%s\n'
     path = ""
-
     event_filters = args.filter.split(',')
     if args.out:
         path = args.out
-
-    if args.l == 'both':
-        full_output = open(path + args.full_log, 'w')
-        event_output = open(path + args.event_log, 'w')
-    elif args.l == 'full':
-        full_output = open(path + args.full_log, 'w')
-    elif args.l == 'event':
-        event_output = open(path + args.event_log, 'w')
+    logger = Log(args.l, path, {'event': args.event_log, 'full': args.full_log})
     for session in Sniffer.sniff(args.interface, args.port):
         ptime, client, req_size, resp_size, command = session
         comm_parts = command.split()
         if comm_parts[0].lower() not in event_filters:
             continue
         if args.l == 'event':
-            event_output.write(fmt % command)
-            event_output.flush()
+            logger.write_event(fmt % command)
         elif args.l == 'full':
-            full_output.write(fmt_full % (ptime, client, req_size, resp_size, command))
-            full_output.flush()
+            logger.write_log(fmt_full % (ptime, client, req_size, resp_size, command))
         else:
-            event_output.write(fmt % command)
-            full_output.write(fmt_full % (ptime, client, req_size, resp_size, command))
-            event_output.flush()
-            full_output.flush()
+            logger.write_event(fmt % command)
+            logger.write_log(fmt_full % (ptime, client, req_size, resp_size, command))
 
 if __name__ == '__main__':
     main()
