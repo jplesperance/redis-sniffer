@@ -2,7 +2,7 @@ import io
 
 
 class Log:
-    def __init__(self, log_level="event", location=None, files_names={}, event_logs=None):
+    def __init__(self, log_level="event", location=None, files_names={}):
         if log_level == "event" or log_level == "both" or log_level == "debug":
             self.event_log = io.open(location + files_names['event'], 'w')
         elif log_level == "full" or log_level == "both" or log_level == "debug":
