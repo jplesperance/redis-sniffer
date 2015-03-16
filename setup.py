@@ -30,7 +30,7 @@ setup(name='redis-sniffer',
       install_requires=install_requires,
       entry_points={
           'console_scripts': [
-              'redis-sniffer = redis_sniffer.sniffer:main',
+              'redis-sniffer = redis_sniffer.sniffer.Sniffer:main',
           ],
       },
       )
