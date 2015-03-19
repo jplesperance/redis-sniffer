@@ -18,6 +18,7 @@ def main():
                         Default: full_sniff")
     parser.add_argument('-f', '--filter', default="none", help="comma separated list of events to log(ex: setex,delete)"
                         )
+    parser.add_argument('--append', default="_sniff", help="the suffix to append to command logs")
     args = parser.parse_args()
     fmt_full = '%.6f %-21s %8d %8d %s\n'
     fmt = '%s\n'
@@ -25,12 +26,13 @@ def main():
     event_filters = args.filter.split(',')
     if args.out:
         path = args.out
-    logger = Log(args.l, path, {'event': args.event_log, 'full': args.full_log})
+    logger = Log(args.l, path, {'event': args.event_log, 'full': args.full_log}, event_filters, args.append)
+
     for session in Sniffer.sniff(args.interface, args.port):
         ptime, client, req_size, resp_size, command = session
         comm_parts = command.split()
-        if comm_parts[0].lower() not in event_filters:
-            continue
+        if comm_parts[0].lower() in event_filters:
+            logger.write_command(comm_parts[0].lower(), command)
         if args.l == 'event':
             logger.write_event(fmt % command)
         elif args.l == 'full':
