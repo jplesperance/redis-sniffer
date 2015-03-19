@@ -58,3 +58,9 @@ target/
 .pybuild/
 redis_sniffer/event_sniff
 redis_sniffer/full_sniff
+test.py
+redis_sniffer/test.py
+redis_sniffer/log.pyc
+redis_sniffer/sniffer.pyc
+redis_sniffer/none_sniff
+redis_sniffer/setex_sniff
