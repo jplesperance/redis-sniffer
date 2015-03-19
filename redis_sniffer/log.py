@@ -12,8 +12,7 @@ class Log:
         self.files = {}
         if len(filters) > 0:
             for event in filters:
-                self.files[event] = io.open(location + event + append)
-
+                self.files[event] = io.open(location + event + append, 'w')
 
     def write_event(self, event):
         self.event_log.write(event)
