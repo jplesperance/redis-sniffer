@@ -10,9 +10,9 @@ install_requires = [
 if sys.version_info < (2, 7):
     install_requires.append('argparse')
 
-setup(name='redis-hound',
+setup(name='redis-sniffer',
       version=version,
-      iteration='',
+      iteration='1',
       description="A redis sniffing & event logging utility",
       long_description=open('README.md').read(),
       classifiers=['Topic :: Database',
@@ -30,7 +30,7 @@ setup(name='redis-hound',
       install_requires=install_requires,
       entry_points={
           'console_scripts': [
-              'redis-sniffer = redis_sniffer.main.main',
+              'redis-sniffer = redis_sniffer.main:main',
           ],
       },
       )
