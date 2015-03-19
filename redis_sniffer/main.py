@@ -1,5 +1,4 @@
 import argparse
-import io
 from sniffer import Sniffer
 from log import Log
 
@@ -10,7 +9,7 @@ def main():
     parser.add_argument('-p', '--port', type=int, help="the port to grab packets from.  Default: 6379", default=6379)
     parser.add_argument('--out', help="the location to generate the full or event logs, defaults to the directory the \
                         application is executed from")
-    parser.add_argument('-l', choices=['both', 'event', 'full'], default='both', help="the type of log(s) you want to \
+    parser.add_argument('-l', choices=['debug', 'event', 'full'], default='full', help="the type of log(s) you want to \
                         create. Default: both")
     parser.add_argument('-el', '--event-log', default="event_sniff", help="the name of the event outout file. \
                         Default: event_sniff")
@@ -35,10 +34,7 @@ def main():
             logger.write_command(comm_parts[0].lower(), command)
         if args.l == 'event':
             logger.write_event(fmt % command)
-        elif args.l == 'full':
-            logger.write_log(fmt_full % (ptime, client, req_size, resp_size, command))
-        else:
-            logger.write_event(fmt % command)
+        if args.l == 'full':
             logger.write_log(fmt_full % (ptime, client, req_size, resp_size, command))
 
 if __name__ == '__main__':
