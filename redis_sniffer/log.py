@@ -3,13 +3,13 @@ import sys
 
 class Log:
 
-    def __init__(self, log_level="both", location=None, files_names={}, filters={}, append="_sniff"):
-        if log_level == "event" or log_level == "both" or log_level == "debug":
+    def __init__(self, log_level="full", location=None, files_names={}, filters={}, append="_sniff"):
+        if log_level == "event" or log_level == "full" or log_level == "debug":
             try:
                 self.event_log = io.open(location + files_names['event'], 'w')
             except IOError:
                 sys.exit('Unable to write to file: ' + location + files_names['event'])
-        if log_level == "full" or log_level == "both" or log_level == "debug":
+        if log_level == "full" or  log_level == "debug":
             try:
                 self.full_log = io.open(location + files_names['full'], 'w')
             except IOError:

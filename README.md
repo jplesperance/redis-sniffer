@@ -1,12 +1,10 @@
-# Redis Sniffer v1.0.0
+# Redis Sniffer v1.1.0
 
 ## About
 
-This sniffer is based on http://github.com/xupeng/redis-sa
-
 This tool will monitor a specific port and interface for redis traffic and captures the commands being sent to Redis and/or formatted full TCP dump data.  This can be used for analysis for debugging or for replaying the transactions as a way of doing real load/performance testing.
 
-Redis Sniffer must be run locally on a Redis server.
+Redis Hound must be run locally on a Redis server or a server that is sending commands to Redis.
 
 ## Installation
 Installing from the Eternal Projects Apt repo is the preferred method of installation since it handles installing all the needed dependencies.
@@ -52,6 +50,8 @@ sudo python setup.py install --user
 **Please Note: Redis Sniffer must be run as root/sudo since it has to bind to a network interface which is not allowed by non-privileged users.**
 ```bash
 sudo redis-sniffer -i <interface> -p <port>
+
+sudo redis-sniffer -i bond0 -p 6379 -f setex,select,del
 ```
 Additional Options:
 ```bash
@@ -59,4 +59,5 @@ Additional Options:
 --out - location to write logs
 --event-log - name of the event log
 --full-log - name of the full log
+-f, --filter - specify a comma seperated list of redis commands to log
 ```
