@@ -27,7 +27,7 @@ def main():
         path = args.out
     logger = Log(args.l, path, {'event': args.event_log, 'full': args.full_log}, event_filters, args.append)
 
-    for session in Sniffer.sniff(args.interface, args.port):
+    for session in Sniffer.sniff(args.interface, args.port, None, None, True):
         ptime, client, req_size, resp_size, command = session
         comm_parts = command.split()
         if comm_parts[0].lower() in event_filters:
