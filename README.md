@@ -1,4 +1,4 @@
-# Redis Sniffer v1.1.0
+# Redis Sniffer v1.1.1
 
 ## About
 
