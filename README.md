@@ -60,4 +60,5 @@ Additional Options:
 --event-log - name of the event log
 --full-log - name of the full log
 -f, --filter - specify a comma seperated list of redis commands to log
+--extra - log the extra non-redis events to a log file
 ```

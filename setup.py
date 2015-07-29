@@ -1,7 +1,7 @@
 from setuptools import setup, find_packages
 import sys
 
-version = '1.1.0'
+version='1.1.0'
 
 install_requires = [
     'pypcap',
@@ -12,7 +12,6 @@ if sys.version_info < (2, 7):
 
 setup(name='redis-sniffer',
       version=version,
-      iteration='1',
       description="A redis sniffing & event logging utility",
       long_description=open('README.md').read(),
       classifiers=['Topic :: Database',
