@@ -7,5 +7,5 @@ script: echo foo
 before_install:
   - sudo apt-get install -y libpcap-dev
   - sudo pip install codecov
-after_auccess:
+after_success:
   - codecov
