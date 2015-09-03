@@ -5,7 +5,7 @@ python:
 sudo: required
 script: coverage run tests.py
 before_install:
-  - sudo apt-get install -y libpcap-dev
+  - sudo apt-get install -y libpcap-dev python-pypcap
   - sudo pip install codecov
 after_success:
   - codecov
