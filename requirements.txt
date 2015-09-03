@@ -1,2 +1,2 @@
-pcapy>=1.1
+pcapy>=0.10
 dpkt>=1.7
