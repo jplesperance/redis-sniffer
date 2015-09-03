@@ -1,5 +1,5 @@
 # Redis Sniffer v1.1.0
-[![Requirements Status](https://requires.io/github/jplesperance/redis-sniffer/requirements.svg?branch=bugfix%2FRS-1-allow-capture-of-non-redis-traffic)](https://requires.io/github/jplesperance/redis-sniffer/requirements/?branch=bugfix%2FRS-1-allow-capture-of-non-redis-traffic)
+[![Requirements Status](https://requires.io/github/jplesperance/redis-sniffer/requirements.svg?branch=bugfix%2FRS-1-allow-capture-of-non-redis-traffic)](https://requires.io/github/jplesperance/redis-sniffer/requirements/?branch=bugfix%2FRS-1-allow-capture-of-non-redis-traffic)  https://travis-ci.org/jplesperance/redis-sniffer.svg?branch=bugfix%2FRS-1-allow-capture-of-non-redis-traffic
 
 ## About
 
