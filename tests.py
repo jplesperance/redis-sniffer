@@ -1,8 +1,8 @@
 import unittest
-import redis_sniffer.sniffer
+from redis_sniffer import sniffer
 
-class TestClass(unittest.TestCase):
-    def test_version(self):
+ class TestClass(unittest.TestCase):
+     def test_version(self):
         self.assertEqual(sniffer.version(), "v1.0.0")
 
 
