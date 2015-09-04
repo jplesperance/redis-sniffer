@@ -19,6 +19,10 @@ class Sniffer:
         return
 
     @staticmethod
+    def version():
+        return 'v1.1.0'
+
+    @staticmethod
     def sniff(interface, port=6379, src_ip=None, dst_ip=None, debug=False):
 
         pc = pcap.pcap(interface)

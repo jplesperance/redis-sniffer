@@ -1,0 +1,11 @@
+language: python
+python:
+  - "2.6"
+  - "2.7"
+sudo: required
+script: coverage run tests.py
+before_install:
+  - sudo apt-get install -y libpcap-dev python-pypcap python-dpkt
+  - sudo pip install codecov
+after_success:
+  - codecov
