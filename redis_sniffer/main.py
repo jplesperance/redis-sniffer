@@ -18,6 +18,7 @@ def main():
     parser.add_argument('-f', '--filter', default="none", help="comma separated list of events to log(ex: setex,delete)"
                         )
     parser.add_argument('--append', default="_sniff", help="the suffix to append to command logs")
+    parser.add_argument('--extra',  store=True, help="log non-redis traffic"
     args = parser.parse_args()
     fmt_full = '%.6f %-21s %8d %8d %s\n'
     fmt = '%s\n'
