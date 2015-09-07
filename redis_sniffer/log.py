@@ -17,6 +17,11 @@ class Log:
         if log_level == "debug":
             self.debug_log = io.open('/var/log/rh.out', 'w')
         self.files = {}
+        if log_level == 'extra':
+            try:
+                self.extra_log = io.open(location + "redis_extra.out", 'w')
+            except IOError:
+                sys.exit('Unable to write to file: ' + location + "redis_edtra.out")
         if len(filters) > 0:
             for event in filters:
                 self.files[event] = io.open(location + event + append, 'w')
@@ -37,3 +42,7 @@ class Log:
         if event in self.files.keys():
             self.files[event].write(unicode(command))
             self.files[event].flush()
+
+    def write_extra(self, data):
+        self.extra_log.write(unicode(data))
+        self.extra_log.flush()
