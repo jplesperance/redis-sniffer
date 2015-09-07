@@ -44,5 +44,5 @@ class Log:
             self.files[event].flush()
 
     def write_extra(self, data):
-        self.extra_log.write(unicode(data))'
+        self.extra_log.write(unicode(data))
         self.extra_log.flush()
