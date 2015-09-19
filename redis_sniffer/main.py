@@ -1,6 +1,8 @@
 import argparse
 from sniffer import Sniffer
 from log import Log
+import logging
+import os
 
 
 def main():
@@ -28,7 +30,13 @@ def main():
         path = args.out
     logger = Log(args.l, path, {'event': args.event_log, 'full': args.full_log}, event_filters, args.append)
 
-    for session in Sniffer.sniff(args.interface, args.port, None, None, True):
+    log_level = logging.INFO
+    if args.l == 'debug':
+        log_level = logging.DEBUG
+
+    logging.basicConfig(filename=os.path.join(args.out, 'sniffer.log'), level=log_level)
+
+    for session in Sniffer.sniff(args.interface, args.port):
         ptime, client, req_size, resp_size, command = session
         comm_parts = command.split()
         if comm_parts[0].lower() in event_filters:

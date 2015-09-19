@@ -10,6 +10,7 @@ from collections import defaultdict
 import pcap
 import dpkt
 from redis_sniffer.log import Log
+import logging
 
 
 class Sniffer:
@@ -17,9 +18,7 @@ class Sniffer:
     re_lens = re.compile('\$\d+')
     src_ip = None
     dst_ip = None
-    debug = False
     logger = None
-    debugMsg = []
 
 
     def __init__(self):
@@ -36,10 +35,6 @@ class Sniffer:
     @staticmethod
     def set_dst_ip(ip):
         Sniffer.dst_ip = ip
-
-    @staticmethod
-    def set_debug(debug):
-        Sniffer.debug = debug
 
     @staticmethod
     def set_filters(port):
@@ -59,11 +54,11 @@ class Sniffer:
         src_addr = '%s:%s' % (src, sport)
         dst_addr = '%s:%s' % (dst, dport)
         if sport == port:
-            Sniffer.debugMsg.append("Data is being sent")
+            logging.debug("Data is a redis response")
             receiving = False
             client = dst_addr
         else:
-            Sniffer.debugMsg.append("Data is being received")
+            logging.debug("Data is a redis request")
             receiving = True
             client = src_addr
         return client
@@ -123,7 +118,7 @@ class Sniffer:
         request_sizes = defaultdict(int)
         sessions = {}
 
-        Sniffer.debugMsg.append("<=============== Checking for Ethernet Packets ==============>")
+        logging.debug("<=============== Checking for Ethernet Packets ==============>")
 
         for ptime, pdata in pc:
             ether_pkt = dpkt.ethernet.Ethernet(pdata)
@@ -131,15 +126,15 @@ class Sniffer:
             tcp_pkt = ip_pkt.data
             tcp_data = tcp_pkt.data
 
-            Sniffer.debugMsg.append("Checking the length of the tcp packet")
+            logging.debug("Checking the length of the tcp packet")
 
             if len(tcp_data) == 0:
-                Sniffer.debugMsg.append("TCP Packet is empty")
+                logging.debug("TCP Packet is empty")
                 continue
 
-            Sniffer.debugMsg.append("TCP Packet has data")
-            Sniffer.debugMsg.append("Checking to see if the data is being sent or received")
             client = Sniffer.get_client(ip_pkt, tcp_pkt)
+            logging.debug("TCP Packet has data")
+            logging.debug("Checking to see if the data is a request or response")
 
             if receiving:
                 # request
@@ -151,7 +146,7 @@ class Sniffer:
                 Sniffer.request_sizes[client] += len(pdata)
                 request_size = Sniffer.request_sizes[client]
                 n_parts = len(_parts)
-                Sniffer.debugMsg.append("Check to ensure the packets contain valid redis commands")
+                logging.debug("Check to ensure the packets contain valid redis commands")
                 try:
                     n_args = int(_parts[0][1:])
                 except ValueError:
@@ -172,7 +167,7 @@ class Sniffer:
             else:
                 session = sessions.get(client)
                 if not session:
-                    Sniffer.debugMsg.append("request not captured, drop its response")
+                    logging.debug("request not captured, drop its response")
                     continue
                 if session.get('response_size'):
                     session['response_size'] += len(pdata)
