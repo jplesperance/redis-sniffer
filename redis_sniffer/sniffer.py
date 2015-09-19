@@ -16,6 +16,7 @@ import logging
 class Sniffer:
     re_args = re.compile('\*\d+')
     re_lens = re.compile('\$\d+')
+    port=None
     src_ip = None
     dst_ip = None
     logger = None
@@ -38,14 +39,14 @@ class Sniffer:
         return _filter
 
     @staticmethod
-    def set_client(ip_pkt, tcp_pkt):
+    def get_client(ip_pkt, tcp_pkt):
         src = socket.inet_ntoa(ip_pkt.src)
         sport = tcp_pkt.sport
         dst = socket.inet_ntoa(ip_pkt.dst)
         dport = tcp_pkt.dport
         src_addr = '%s:%s' % (src, sport)
         dst_addr = '%s:%s' % (dst, dport)
-        if sport == port:
+        if sport == Sniffer.port:
             logging.debug("Data is a redis response")
             receiving = False
             client = dst_addr
@@ -53,7 +54,7 @@ class Sniffer:
             logging.debug("Data is a redis request")
             receiving = True
             client = src_addr
-        return client
+        return client, receiving
 
     @staticmethod
     def getDebugLogger():
@@ -67,6 +68,7 @@ class Sniffer:
             command = ' '.join([c for (i, c) in enumerate(_parts[1:]) if i % 2 == 1])
             Sniffer.receiving_partials.pop(client, None)
             Sniffer.request_sizes.pop(client, None)
+            return command
         else:
             if _parts[2] == 'MULTI':
                 if _parts[-1] == 'EXEC':
@@ -101,7 +103,7 @@ class Sniffer:
 
     @staticmethod
     def sniff(interface, port=6379, debug=False):
-
+        Sniffer.port = port
         pc = pcap.pcap(interface)
         pc.setfilter(Sniffer.set_filters(port))
 
@@ -124,9 +126,9 @@ class Sniffer:
                 logging.debug("TCP Packet is empty")
                 continue
 
-            client = Sniffer.get_client(ip_pkt, tcp_pkt)
             logging.debug("TCP Packet has data")
             logging.debug("Checking to see if the data is a request or response")
+            client, receiving = Sniffer.get_client(ip_pkt, tcp_pkt)
 
             if receiving:
                 # request
