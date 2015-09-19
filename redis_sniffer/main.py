@@ -41,7 +41,6 @@ def main():
         comm_parts = command.split()
         if comm_parts[0].lower() in event_filters:
             logger.write_command(comm_parts[0].lower(), command)
-        if args.l == 'event':
         if logger.event_log:
             logger.write_event(fmt % command)
         if logger.full_log:
