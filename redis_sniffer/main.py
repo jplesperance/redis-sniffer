@@ -10,7 +10,7 @@ def main():
     parser.add_argument('--out', help="the location to generate the full or event logs, defaults to the directory the \
                         application is executed from")
     parser.add_argument('-l', choices=['debug', 'event', 'full'], default='full', help="the type of log(s) you want to \
-                        create. Default: both")
+                        create. Default: full")
     parser.add_argument('-el', '--event-log', default="event_sniff", help="the name of the event outout file. \
                         Default: event_sniff")
     parser.add_argument('-fl', '--full-log', default="full_sniff", help="the name of the full sniff output file. \
