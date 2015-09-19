@@ -42,8 +42,9 @@ def main():
         if comm_parts[0].lower() in event_filters:
             logger.write_command(comm_parts[0].lower(), command)
         if args.l == 'event':
+        if logger.event_log:
             logger.write_event(fmt % command)
-        if args.l == 'full':
+        if logger.full_log:
             logger.write_log(fmt_full % (ptime, client, req_size, resp_size, command))
 
 if __name__ == '__main__':
