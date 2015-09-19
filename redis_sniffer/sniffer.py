@@ -58,6 +58,9 @@ class Sniffer:
 
     @staticmethod
     def process_commands(client, n_args, n_parts, _parts):
+        if n_parts == 1:
+            logging.debug("Complete single command {} ".format(_parts[0]))
+            return _parts[0]
         if (n_args * 2 + 1) == n_parts and int(_parts[-2][1:]) == len(_parts[-1]):
             # Complete normal command
             command = ' '.join([c for (i, c) in enumerate(_parts[1:]) if i % 2 == 1])
@@ -133,7 +136,9 @@ class Sniffer:
                 try:
                     n_args = int(_parts[0][1:])
                 except ValueError:
-                    continue
+                    logging.debug("Inline redis command: {}".format(' '.join(_parts)))
+                    logging.debug(client)
+                    n_args = 0
 
                 command = Sniffer.process_commands(client, n_args, n_parts, _parts)
                 if command:
