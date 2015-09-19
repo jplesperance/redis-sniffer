@@ -29,14 +29,6 @@ class Sniffer:
         return 'v1.1.0'
 
     @staticmethod
-    def set_src_ip(ip):
-        Sniffer.src_ip = ip
-
-    @staticmethod
-    def set_dst_ip(ip):
-        Sniffer.dst_ip = ip
-
-    @staticmethod
     def set_filters(port):
         _filter = 'tcp port %s' % port
         if Sniffer.src_ip:
