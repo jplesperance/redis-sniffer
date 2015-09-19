@@ -61,8 +61,6 @@ class Sniffer:
         if (n_args * 2 + 1) == n_parts and int(_parts[-2][1:]) == len(_parts[-1]):
             # Complete normal command
             command = ' '.join([c for (i, c) in enumerate(_parts[1:]) if i % 2 == 1])
-            Sniffer.receiving_partials.pop(client, None)
-            Sniffer.request_sizes.pop(client, None)
             return command
         else:
             if _parts[2] == 'MULTI':
@@ -84,16 +82,12 @@ class Sniffer:
                                 _partial.append('/')
                             continue
                     command = ' '.join(_partial)
-                    Sniffer.receiving_partials.pop(client, None)
-                    Sniffer.request_sizes.pop(client, None)
                     return command
                 else:
                     # Partial MULTI command
-                    Sniffer.receiving_partials[client] = _parts
                     return False
             else:
                 # Partial normal command
-                Sniffer.receiving_partials[client] = _parts
                 return False
 
     @staticmethod
@@ -103,7 +97,7 @@ class Sniffer:
         pc.setfilter(Sniffer.set_filters(port))
 
         receiving = False
-        Sniffer.receiving_partials = {}
+        receiving_partials = {}
         request_sizes = defaultdict(int)
         sessions = {}
 
@@ -130,10 +124,10 @@ class Sniffer:
                 if not tcp_data:
                     continue
                 _parts = tcp_data.splitlines()
-                _receiving_partial = Sniffer.receiving_partials.get(client, [])
+                _receiving_partial = receiving_partials.get(client, [])
                 _parts = _receiving_partial + _parts
-                Sniffer.request_sizes[client] += len(pdata)
-                request_size = Sniffer.request_sizes[client]
+                request_sizes[client] += len(pdata)
+                request_size = request_sizes[client]
                 n_parts = len(_parts)
                 logging.debug("Check to ensure the packets contain valid redis commands")
                 try:
@@ -142,7 +136,11 @@ class Sniffer:
                     continue
 
                 command = Sniffer.process_commands(client, n_args, n_parts, _parts)
-                if command == False:
+                if command:
+                    receiving_partials.pop(client, None)
+                    request_sizes.pop(client, None)
+                else:
+                    receiving_partials[client] = _parts
                     continue
 
                 stat = sessions.pop(client, None)
