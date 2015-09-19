@@ -57,11 +57,6 @@ class Sniffer:
         return client, receiving
 
     @staticmethod
-    def getDebugLogger():
-        if None in Sniffer.logger:
-            Sniffer.logger = Log('debug', "./", {'debug': 'rs_debug'})
-
-    @staticmethod
     def process_commands(client, n_args, n_parts, _parts):
         if (n_args * 2 + 1) == n_parts and int(_parts[-2][1:]) == len(_parts[-1]):
             # Complete normal command
