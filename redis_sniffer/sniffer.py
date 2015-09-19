@@ -62,13 +62,13 @@ class Sniffer:
             logging.debug("Complete single command {} ".format(_parts[0]))
             return _parts[0]
         if (n_args * 2 + 1) == n_parts and int(_parts[-2][1:]) == len(_parts[-1]):
-            # Complete normal command
+            logging.debug("Complete normal command")
             command = ' '.join([c for (i, c) in enumerate(_parts[1:]) if i % 2 == 1])
             return command
         else:
             if _parts[2] == 'MULTI':
                 if _parts[-1] == 'EXEC':
-                    # Complete MULTI command
+                    logging.debug("Complete MULTI command")
                     _multi_parts = _parts[2:]
                     _partial = []
                     _n_args = 1
@@ -87,10 +87,10 @@ class Sniffer:
                     command = ' '.join(_partial)
                     return command
                 else:
-                    # Partial MULTI command
+                    logging.debug("Partial MULTI command")
                     return False
             else:
-                # Partial normal command
+                logging.debug("Partial normal command")
                 return False
 
     @staticmethod
