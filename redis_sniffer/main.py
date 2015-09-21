@@ -7,7 +7,9 @@ import os
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('-i', '--interface', help="the interface to bind to")
+    source_group = parser.add_mutually_exclusive_group(required=True)
+    source_group.add_argument('-i', '--interface', help="the interface to bind to")
+    source_group.add_argument('-F', '--file', help="pcap file containing captured traffic to analyze")
     parser.add_argument('-p', '--port', type=int, help="the port to grab packets from.  Default: 6379", default=6379)
     parser.add_argument('--out', help="the location to generate the full or event logs, defaults to the directory the \
                         application is executed from")
@@ -41,7 +43,7 @@ def main():
     if not source:
         replay = True
         source = args.file
-    sniffer = Sniffer(args.interface, args.port)
+    sniffer = Sniffer(source, args.port, replay=replay)
 
     for session in sniffer.sniff():
         ptime, client, req_size, resp_size, command = session

@@ -16,9 +16,12 @@ RE_ARGS = re.compile('\*\d+')
 RE_LENS = re.compile('\$\d+')
 
 class Sniffer:
-    def __init__(self, source, port=6379, src_ip=None, dst_ip=None):
+    def __init__(self, source, port=6379, src_ip=None, dst_ip=None, replay=False):
         self.port = port
-        self.packet_iterator = live_iterator(source, port, src_ip, dst_ip)
+        if replay:
+            self.packet_iterator = replay_iterator(source, port, src_ip, dst_ip)
+        else:
+            self.packet_iterator = live_iterator(source, port, src_ip, dst_ip)
 
     @staticmethod
     def version():
@@ -147,6 +150,21 @@ class Sniffer:
                 else:
                     session['response_size'] = len(pdata)
                     # TODO: write logger message buffer to file
+
+def replay_iterator(pcap, redis_port=6379, src_ip=None, dst_ip=None):
+    from scapy.all import PcapReader
+    import itertools
+    reader = PcapReader(pcap)
+
+    def packet_filter(p):
+        return (p.payload.sport == redis_port or p.payload.dport == redis_port) and \
+               (src_ip == None or src_ip == p.payload.src) and \
+               (dst_ip == None or dst_ip == p.payload.dst)
+
+    def map_to_pcap(p):
+        return p.time, p.original
+
+    return itertools.imap(map_to_pcap, itertools.ifilter(packet_filter, reader))
 
 def live_iterator(interface, redis_port=6379, src_ip=None, dst_ip=None):
     filter = 'tcp port %s' % redis_port
