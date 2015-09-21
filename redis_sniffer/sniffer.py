@@ -114,6 +114,11 @@ class Sniffer:
                 request_sizes[client] += len(pdata)
                 data = receiving_partials.get(client, '') + tcp_data
 
+                if data[-2:] != '\r\n':
+                    logging.debug("Command not CRLF terminated. Add to partial and continue.")
+                    receiving_partials[client] = data
+                    continue
+
                 # Ensure that if the CRLF is split between requests that the "newline" isn't double counted
                 _parts = data.splitlines()
 
@@ -121,9 +126,15 @@ class Sniffer:
                 try:
                     n_args = int(_parts[0][1:])
                 except ValueError:
-                    logging.debug("Inline redis command: {}".format(' '.join(_parts)))
-                    logging.debug(client)
-                    n_args = 0
+                    if n_parts == 1:
+                        logging.debug("Inline redis command: {}".format(' '.join(_parts)))
+                        n_args = 0
+                    else:
+                        logging.warn("Unknown packet")
+                        logging.debug(data)
+                        receiving_partials.pop(client, None)
+                        request_sizes.pop(client, None)
+                        continue
 
                 command = self.process_commands(n_args, _parts)
                 if command:
