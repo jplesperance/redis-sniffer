@@ -110,12 +110,13 @@ class Sniffer:
                 # request
                 if not tcp_data:
                     continue
-                _parts = tcp_data.splitlines()
-                _receiving_partial = receiving_partials.get(client, [])
-                _parts = _receiving_partial + _parts
+
                 request_sizes[client] += len(pdata)
-                request_size = request_sizes[client]
-                n_parts = len(_parts)
+                data = receiving_partials.get(client, '') + tcp_data
+
+                # Ensure that if the CRLF is split between requests that the "newline" isn't double counted
+                _parts = data.splitlines()
+
                 logging.debug("Check to ensure the packets contain valid redis commands")
                 try:
                     n_args = int(_parts[0][1:])
@@ -124,22 +125,23 @@ class Sniffer:
                     logging.debug(client)
                     n_args = 0
 
-                command = Sniffer.process_commands(client, n_args, n_parts, _parts)
+                command = self.process_commands(n_args, _parts)
                 if command:
                     receiving_partials.pop(client, None)
-                    request_sizes.pop(client, None)
+                    request_size = request_sizes.pop(client, 0)
+
+                    # All responses must have been collected. Yield the previous session before overwriting
+                    stat = sessions.pop(client, None)
+                    if stat:
+                        _request_size = stat.get('request_size', 0)
+                        _response_size = stat.get('response_size', 0)
+                        _command = stat['command']
+                        yield ptime, client, _request_size, _response_size, _command
+
+                    sessions[client] = {'command': command, 'request_size': request_size}
                 else:
-                    receiving_partials[client] = _parts
-                    continue
-
-                stat = sessions.pop(client, None)
-                if stat:
-                    _request_size = stat.get('request_size', 0)
-                    _response_size = stat.get('response_size', 0)
-                    _command = stat['command']
-                    yield ptime, client, _request_size, _response_size, _command
-
-                sessions[client] = {'command': command, 'request_size': request_size}
+                    # Couldn't resolve command, stash all the data in the dict until the next packet is found
+                    receiving_partials[client] = data
             else:
                 session = sessions.get(client)
                 if not session:
