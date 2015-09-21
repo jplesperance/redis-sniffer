@@ -50,6 +50,8 @@ class Sniffer:
         if n_parts == 1:
             logging.debug("Complete single command {} ".format(_parts[0]))
             return _parts[0]
+        # TODO: pipelined requests :(
+        # TODO: check for null as last element
         if (n_args * 2 + 1) == n_parts and int(_parts[-2][1:]) == len(_parts[-1]):
             logging.debug("Complete normal command")
             command = ' '.join([c for (i, c) in enumerate(_parts[1:]) if i % 2 == 1])
@@ -108,6 +110,7 @@ class Sniffer:
 
             if receiving:
                 # request
+                # TODO: why is this check here?
                 if not tcp_data:
                     continue
 
@@ -162,7 +165,6 @@ class Sniffer:
                     session['response_size'] += len(pdata)
                 else:
                     session['response_size'] = len(pdata)
-                    # TODO: write logger message buffer to file
 
 def replay_iterator(pcap, redis_port=6379, src_ip=None, dst_ip=None):
     from scapy.all import PcapReader
