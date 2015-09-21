@@ -36,7 +36,14 @@ def main():
 
     logging.basicConfig(filename=os.path.join(args.out, 'sniffer.log'), level=log_level)
 
-    for session in Sniffer.sniff(args.interface, args.port):
+    source = args.interface
+    replay = False
+    if not source:
+        replay = True
+        source = args.file
+    sniffer = Sniffer(args.interface, args.port)
+
+    for session in sniffer.sniff():
         ptime, client, req_size, resp_size, command = session
         comm_parts = command.split()
         if comm_parts[0].lower() in event_filters:

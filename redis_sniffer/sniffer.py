@@ -12,41 +12,26 @@ import dpkt
 from redis_sniffer.log import Log
 import logging
 
+RE_ARGS = re.compile('\*\d+')
+RE_LENS = re.compile('\$\d+')
 
 class Sniffer:
-    re_args = re.compile('\*\d+')
-    re_lens = re.compile('\$\d+')
-    port=None
-    src_ip = None
-    dst_ip = None
-    logger = None
-
-
-    def __init__(self):
-        return
+    def __init__(self, source, port=6379, src_ip=None, dst_ip=None):
+        self.port = port
+        self.packet_iterator = live_iterator(source, port, src_ip, dst_ip)
 
     @staticmethod
     def version():
         return 'v1.1.0'
 
-    @staticmethod
-    def set_filters(port):
-        _filter = 'tcp port %s' % port
-        if Sniffer.src_ip:
-            _filter += ' and src %s' % Sniffer.src_ip
-        if Sniffer.dst_ip:
-            _filter += ' and dst %s' % Sniffer.dst_ip
-        return _filter
-
-    @staticmethod
-    def get_client(ip_pkt, tcp_pkt):
+    def get_client(self, ip_pkt, tcp_pkt):
         src = socket.inet_ntoa(ip_pkt.src)
         sport = tcp_pkt.sport
         dst = socket.inet_ntoa(ip_pkt.dst)
         dport = tcp_pkt.dport
         src_addr = '%s:%s' % (src, sport)
         dst_addr = '%s:%s' % (dst, dport)
-        if sport == Sniffer.port:
+        if sport == self.port:
             logging.debug("Data is a redis response")
             receiving = False
             client = dst_addr
@@ -56,8 +41,9 @@ class Sniffer:
             client = src_addr
         return client, receiving
 
-    @staticmethod
-    def process_commands(client, n_args, n_parts, _parts):
+    def process_commands(self, n_args, _parts):
+        n_parts = len(_parts)
+
         if n_parts == 1:
             logging.debug("Complete single command {} ".format(_parts[0]))
             return _parts[0]
@@ -73,10 +59,10 @@ class Sniffer:
                     _partial = []
                     _n_args = 1
                     for _part in _multi_parts:
-                        if Sniffer.re_args.match(_part):
+                        if RE_ARGS.match(_part):
                             _n_args = int(_part[1:])
                             continue
-                        if Sniffer.re_lens.match(_part):
+                        if RE_LENS.match(_part):
                             continue
                         if _n_args > 0:
                             _partial.append(_part)
@@ -93,12 +79,7 @@ class Sniffer:
                 logging.debug("Partial normal command")
                 return False
 
-    @staticmethod
-    def sniff(interface, port=6379, debug=False):
-        Sniffer.port = port
-        pc = pcap.pcap(interface)
-        pc.setfilter(Sniffer.set_filters(port))
-
+    def sniff(self):
         receiving = False
         receiving_partials = {}
         request_sizes = defaultdict(int)
@@ -106,7 +87,7 @@ class Sniffer:
 
         logging.debug("<=============== Checking for Ethernet Packets ==============>")
 
-        for ptime, pdata in pc:
+        for ptime, pdata in self.packet_iterator:
             ether_pkt = dpkt.ethernet.Ethernet(pdata)
             ip_pkt = ether_pkt.data
             tcp_pkt = ip_pkt.data
@@ -120,7 +101,7 @@ class Sniffer:
 
             logging.debug("TCP Packet has data")
             logging.debug("Checking to see if the data is a request or response")
-            client, receiving = Sniffer.get_client(ip_pkt, tcp_pkt)
+            client, receiving = self.get_client(ip_pkt, tcp_pkt)
 
             if receiving:
                 # request
@@ -167,4 +148,15 @@ class Sniffer:
                     session['response_size'] = len(pdata)
                     # TODO: write logger message buffer to file
 
+def live_iterator(interface, redis_port=6379, src_ip=None, dst_ip=None):
+    filter = 'tcp port %s' % redis_port
+    if src_ip:
+        filter += ' and src %s' % src_ip
+    if dst_ip:
+        filter += ' and dst %s' % dst_ip
+
+    pc = pcap.pcap(interface)
+    pc.setfilter(filter)
+
+    return pc
 
