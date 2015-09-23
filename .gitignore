@@ -65,3 +65,4 @@ redis_sniffer/log.pyc
 redis_sniffer/sniffer.pyc
 redis_sniffer/none_sniff
 redis_sniffer/setex_sniff
+venv
