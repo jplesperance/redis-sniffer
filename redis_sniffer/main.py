@@ -15,11 +15,11 @@ def main():
                         directory the application is executed from")
     parser.add_argument('-l', choices=['debug', 'event', 'full'], default='full', help="the type of log(s) you want to \
                         create. Default: full")
-    parser.add_argument('-el', '--event-log', default="event_sniff", help="the name of the event outout file. \
+    parser.add_argument('-el', '--event-log', default="event", help="the name of the event outout file. \
                         Default: event_sniff")
-    parser.add_argument('-fl', '--full-log', default="full_sniff", help="the name of the full sniff output file. \
+    parser.add_argument('-fl', '--full-log', default="full", help="the name of the full sniff output file. \
                         Default: full_sniff")
-    parser.add_argument('-f', '--filter', default="none", help="comma separated list of events to log(ex: setex,delete)"
+    parser.add_argument('-f', '--filter', default="", help="comma separated list of events to log(ex: setex,delete)"
                         )
     parser.add_argument('--append', default="_sniff", help="the suffix to append to command logs")
     parser.add_argument('--extra', help="log non-redis traffic")
