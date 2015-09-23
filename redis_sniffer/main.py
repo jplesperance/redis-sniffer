@@ -11,8 +11,8 @@ def main():
     source_group.add_argument('-i', '--interface', help="the interface to bind to")
     source_group.add_argument('-F', '--file', help="pcap file containing captured traffic to analyze")
     parser.add_argument('-p', '--port', type=int, help="the port to grab packets from.  Default: 6379", default=6379)
-    parser.add_argument('--out', help="the location to generate the full or event logs, defaults to the directory the \
-                        application is executed from")
+    parser.add_argument('--out', default='.', help="the location to generate the full or event logs, defaults to the \
+                        directory the application is executed from")
     parser.add_argument('-l', choices=['debug', 'event', 'full'], default='full', help="the type of log(s) you want to \
                         create. Default: full")
     parser.add_argument('-el', '--event-log', default="event_sniff", help="the name of the event outout file. \
@@ -26,11 +26,9 @@ def main():
     args = parser.parse_args()
     fmt_full = '%.6f %-21s %8d %8d %s\n'
     fmt = '%s\n'
-    path = ""
-    event_filters = args.filter.split(',')
-    if args.out:
-        path = args.out
-    logger = Log(args.l, path, {'event': args.event_log, 'full': args.full_log}, event_filters, args.append)
+    event_filters = args.filter.split(',') if args.filter else []
+
+    logger = Log(args.l, args.out, {'event': args.event_log, 'full': args.full_log}, event_filters, args.append)
 
     log_level = logging.INFO
     if args.l == 'debug':

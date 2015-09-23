@@ -1,30 +1,31 @@
 import io
+import os
 import sys
 
 class Log:
 
-    def __init__(self, log_level="full", location=None, files_names={}, filters={}, append="_sniff"):
+    def __init__(self, log_level="full", location='', files_names={}, filters=[], append="_sniff"):
         if log_level == "event" or log_level == "full" or log_level == "debug":
+            path = os.path.join(location, files_names['event'] + append)
             try:
-                self.event_log = io.open(location + files_names['event'], 'w')
+                self.event_log = io.open(path, 'w')
             except IOError:
-                sys.exit('Unable to write to file: ' + location + files_names['event'])
+                sys.exit('Unable to write to file: {}'.format(path))
         if log_level == "full" or  log_level == "debug":
+            path = os.path.join(location, files_names['full'] + append)
             try:
-                self.full_log = io.open(location + files_names['full'], 'w')
+                self.full_log = io.open(path, 'w')
             except IOError:
-                sys.exit('Unable to write to file: ' + location + files_names['full'])
-        if log_level == "debug":
-            self.debug_log = io.open('/var/log/rh.out', 'w')
+                sys.exit('Unable to write to file: {}'.format(path))
         self.files = {}
         if log_level == 'extra':
             try:
                 self.extra_log = io.open(location + "redis_extra.out", 'w')
             except IOError:
-                sys.exit('Unable to write to file: ' + location + "redis_edtra.out")
-        if len(filters) > 0:
-            for event in filters:
-                self.files[event] = io.open(location + event + append, 'w')
+                sys.exit('Unable to write to file: ' + location + "redis_extra.out")
+
+        for event in filters:
+            self.files[event] = io.open(location + event + append, 'w')
 
     def write_event(self, event):
         self.event_log.write(unicode(event))
