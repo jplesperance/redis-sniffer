@@ -3,25 +3,23 @@
 """ A redis query sniffer
 """
 
+import logging
 import re
 import socket
 
+import dpkt
 import hiredis
 import pcap
-import dpkt
+
 from redis_sniffer.log import Log
-import logging
 
 RE_ARGS = re.compile('\*\d+')
 RE_LENS = re.compile('\$\d+')
 
 class Sniffer:
-    def __init__(self, source, port=6379, src_ip=None, dst_ip=None, replay=False):
+    def __init__(self, source, port=6379, src_ip=None, dst_ip=None):
         self.port = port
-        if replay:
-            self.packet_iterator = replay_iterator(source, port, src_ip, dst_ip)
-        else:
-            self.packet_iterator = live_iterator(source, port, src_ip, dst_ip)
+        self.packet_iterator = packet_iterator(source, port, src_ip, dst_ip)
 
     @staticmethod
     def version():
@@ -94,22 +92,7 @@ class Sniffer:
                 session.process_response_packet(len(pdata), tcp_data)
 
 
-def replay_iterator(pcap, redis_port=6379, src_ip=None, dst_ip=None):
-    from scapy.all import PcapReader
-    import itertools
-    reader = PcapReader(pcap)
-
-    def packet_filter(p):
-        return (p.payload.sport == redis_port or p.payload.dport == redis_port) and \
-             (src_ip == None or src_ip == p.payload.src) and \
-             (dst_ip == None or dst_ip == p.payload.dst)
-
-    def map_to_pcap(packet):
-        return packet.time, packet.original
-
-    return itertools.imap(map_to_pcap, itertools.ifilter(packet_filter, reader))
-
-def live_iterator(interface, redis_port=6379, src_ip=None, dst_ip=None):
+def packet_iterator(interface, redis_port=6379, src_ip=None, dst_ip=None):
     filter = 'tcp port %s' % redis_port
     if src_ip:
         filter += ' and src %s' % src_ip

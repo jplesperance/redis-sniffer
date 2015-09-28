@@ -36,12 +36,8 @@ def main():
 
     logging.basicConfig(filename=os.path.join(args.out, 'sniffer.log'), level=log_level)
 
-    source = args.interface
-    replay = False
-    if not source:
-        replay = True
-        source = args.file
-    sniffer = Sniffer(source, args.port, replay=replay)
+    source = args.interface if args.interface else args.file
+    sniffer = Sniffer(source, args.port)
 
     for session in sniffer.sniff():
         ptime, client, req_size, resp_size, command = session
