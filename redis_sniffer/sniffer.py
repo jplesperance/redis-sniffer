@@ -3,181 +3,154 @@
 """ A redis query sniffer
 """
 
+import logging
 import re
 import socket
-from collections import defaultdict
 
-import pcap
 import dpkt
+import hiredis
+import pcap
+
 from redis_sniffer.log import Log
 
+RE_ARGS = re.compile('\*\d+')
+RE_LENS = re.compile('\$\d+')
 
 class Sniffer:
-    re_args = re.compile('\*\d+')
-    re_lens = re.compile('\$\d+')
-    src_ip = None
-    dst_ip = None
-    debug = False
-    logger = None
-    debugMsg = []
-
-
-    def __init__(self):
-        return
+    def __init__(self, source, port=6379, src_ip=None, dst_ip=None):
+        self.port = port
+        self.packet_iterator = packet_iterator(source, port, src_ip, dst_ip)
 
     @staticmethod
     def version():
         return 'v1.1.0'
 
-    @staticmethod
-    def set_src_ip(ip):
-        Sniffer.src_ip = ip
-
-    @staticmethod
-    def set_dst_ip(ip):
-        Sniffer.dst_ip = ip
-
-    @staticmethod
-    def set_debug(debug):
-        Sniffer.debug = debug
-
-    @staticmethod
-    def set_filters(port):
-        _filter = 'tcp port %s' % port
-        if Sniffer.src_ip:
-            _filter += ' and src %s' % Sniffer.src_ip
-        if Sniffer.dst_ip:
-            _filter += ' and dst %s' % Sniffer.dst_ip
-        return _filter
-
-    @staticmethod
-    def set_client(ip_pkt, tcp_pkt):
+    def get_client(self, ip_pkt, tcp_pkt):
         src = socket.inet_ntoa(ip_pkt.src)
         sport = tcp_pkt.sport
         dst = socket.inet_ntoa(ip_pkt.dst)
         dport = tcp_pkt.dport
         src_addr = '%s:%s' % (src, sport)
         dst_addr = '%s:%s' % (dst, dport)
-        if sport == port:
-            Sniffer.debugMsg.append("Data is being sent")
-            receiving = False
+        if sport == self.port:
+            logging.debug("Data is a redis response")
+            is_request = False
             client = dst_addr
         else:
-            Sniffer.debugMsg.append("Data is being received")
-            receiving = True
+            logging.debug("Data is a redis request")
+            is_request = True
             client = src_addr
-        return client
+        return client, is_request
 
-    @staticmethod
-    def getDebugLogger():
-        if None in Sniffer.logger:
-            Sniffer.logger = Log('debug', "./", {'debug': 'rs_debug'})
-
-    @staticmethod
-    def process_commands(client, n_args, n_parts, _parts):
-        if (n_args * 2 + 1) == n_parts and int(_parts[-2][1:]) == len(_parts[-1]):
-            # Complete normal command
-            command = ' '.join([c for (i, c) in enumerate(_parts[1:]) if i % 2 == 1])
-            Sniffer.receiving_partials.pop(client, None)
-            Sniffer.request_sizes.pop(client, None)
-        else:
-            if _parts[2] == 'MULTI':
-                if _parts[-1] == 'EXEC':
-                    # Complete MULTI command
-                    _multi_parts = _parts[2:]
-                    _partial = []
-                    _n_args = 1
-                    for _part in _multi_parts:
-                        if Sniffer.re_args.match(_part):
-                            _n_args = int(_part[1:])
-                            continue
-                        if Sniffer.re_lens.match(_part):
-                            continue
-                        if _n_args > 0:
-                            _partial.append(_part)
-                            _n_args -= 1
-                            if _n_args == 0 and _part != 'EXEC':
-                                _partial.append('/')
-                            continue
-                    command = ' '.join(_partial)
-                    Sniffer.receiving_partials.pop(client, None)
-                    Sniffer.request_sizes.pop(client, None)
-                    return command
-                else:
-                    # Partial MULTI command
-                    Sniffer.receiving_partials[client] = _parts
-                    return False
-            else:
-                # Partial normal command
-                Sniffer.receiving_partials[client] = _parts
-                return False
-
-    @staticmethod
-    def sniff(interface, port=6379, debug=False):
-
-        pc = pcap.pcap(interface)
-        pc.setfilter(Sniffer.set_filters(port))
-
-        receiving = False
-        Sniffer.receiving_partials = {}
-        request_sizes = defaultdict(int)
+    def sniff(self):
         sessions = {}
 
-        Sniffer.debugMsg.append("<=============== Checking for Ethernet Packets ==============>")
-
-        for ptime, pdata in pc:
+        logging.debug("<=============== Checking for Ethernet Packets ==============>")
+        for ptime, pdata in self.packet_iterator:
             ether_pkt = dpkt.ethernet.Ethernet(pdata)
             ip_pkt = ether_pkt.data
             tcp_pkt = ip_pkt.data
             tcp_data = tcp_pkt.data
 
-            Sniffer.debugMsg.append("Checking the length of the tcp packet")
+            logging.debug("Checking the length of the tcp packet")
 
             if len(tcp_data) == 0:
-                Sniffer.debugMsg.append("TCP Packet is empty")
+                logging.debug("TCP Packet is empty")
+                logging.debug("extra bytes: %s", len(pdata))
                 continue
 
-            Sniffer.debugMsg.append("TCP Packet has data")
-            Sniffer.debugMsg.append("Checking to see if the data is being sent or received")
-            client = Sniffer.get_client(ip_pkt, tcp_pkt)
+            logging.debug("TCP Packet has data")
+            logging.debug("Checking to see if the data is a request or response")
+            client, is_request = self.get_client(ip_pkt, tcp_pkt)
 
-            if receiving:
-                # request
+            if is_request:
+                # TODO: why is this check here?
                 if not tcp_data:
-                    continue
-                _parts = tcp_data.splitlines()
-                _receiving_partial = Sniffer.receiving_partials.get(client, [])
-                _parts = _receiving_partial + _parts
-                Sniffer.request_sizes[client] += len(pdata)
-                request_size = Sniffer.request_sizes[client]
-                n_parts = len(_parts)
-                Sniffer.debugMsg.append("Check to ensure the packets contain valid redis commands")
-                try:
-                    n_args = int(_parts[0][1:])
-                except ValueError:
+                    logging.debug("TCP Data is empty")
+                    logging.debug("extra bytes: %s", len(pdata))
                     continue
 
-                command = Sniffer.process_commands(client, n_args, n_parts, _parts)
-                if command == False:
-                    continue
+                session = sessions.get(client, None)
+                if not session:
+                    logging.debug("Creating a new session for %s", client)
+                    session = RedisSession()
+                    sessions[client] = session
 
-                stat = sessions.pop(client, None)
-                if stat:
-                    _request_size = stat.get('request_size', 0)
-                    _response_size = stat.get('response_size', 0)
-                    _command = stat['command']
-                    yield ptime, client, _request_size, _response_size, _command
+                if session.is_receiving() and session.commands:
+                    yield ptime, client, session.request_size, session.response_size, ' / '.join(session.commands)
+                    session.clear()
 
-                sessions[client] = {'command': command, 'request_size': request_size}
+                session.process_request_packet(len(pdata), tcp_data)
+
             else:
                 session = sessions.get(client)
                 if not session:
-                    Sniffer.debugMsg.append("request not captured, drop its response")
+                    logging.debug("No session for %s. Drop unknown response",client)
+                    logging.debug("extra bytes: %s", len(pdata))
                     continue
-                if session.get('response_size'):
-                    session['response_size'] += len(pdata)
-                else:
-                    session['response_size'] = len(pdata)
-                    # TODO: write logger message buffer to file
 
+                session.process_response_packet(len(pdata), tcp_data)
+
+
+def packet_iterator(interface, redis_port=6379, src_ip=None, dst_ip=None):
+    filter = 'tcp port %s' % redis_port
+    if src_ip:
+        filter += ' and src %s' % src_ip
+    if dst_ip:
+        filter += ' and dst %s' % dst_ip
+
+    pc = pcap.pcap(interface)
+    pc.setfilter(filter)
+
+    return pc
+
+
+class RedisSession():
+    def __init__(self):
+        self.req_reader = hiredis.Reader()
+        self.req_reader.setmaxbuf(0)
+        self.resp_reader = hiredis.Reader()
+        self.resp_reader.setmaxbuf(0)
+
+        self.commands = []
+        self.responses = 0
+        self.request_size = 0
+        self.response_size = 0
+
+    def is_receiving(self):
+        return self.response_size > 0
+
+    def is_complete(self):
+        return self.responses > 0 and self.responses == len(self.commands)
+
+    def process_request_packet(self, length, data):
+        self.request_size += length
+        self.req_reader.feed(data)
+
+        try:
+            command = self.req_reader.gets()
+            # command will be False or an array of tokens that describe the command
+            while command is not False:
+                self.commands.append(' '.join(command))
+                command = self.req_reader.gets()
+        except hiredis.ProtocolError:
+            logging.debug('Partial command')
+
+    def process_response_packet(self, length, data):
+        self.response_size += length
+        self.resp_reader.feed(data)
+
+        try:
+            response = self.resp_reader.gets()
+            while response is not False:
+                self.responses += 1
+                response = self.resp_reader.gets()
+        except hiredis.ProtocolError:
+            logging.debug('Partial response')
+
+    def clear(self):
+        self.commands = []
+        self.responses = 0
+        self.request_size = 0
+        self.response_size = 0
 

@@ -6,7 +6,9 @@ version='1.1.0'
 install_requires = [
     'pypcap',
     'dpkt',
+    'hiredis',
 ]
+
 if sys.version_info < (2, 7):
     install_requires.append('argparse')
 
@@ -32,4 +34,4 @@ setup(name='redis-sniffer',
               'redis-sniffer = redis_sniffer.main:main',
           ],
       },
-      )
+     )
