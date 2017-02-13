@@ -2,3 +2,4 @@ dpkt>=1.7
 hiredis>=0.2.0
 pypcap>=1.1.5
 nose
+codecov
