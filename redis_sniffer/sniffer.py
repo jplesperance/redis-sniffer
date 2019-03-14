@@ -45,9 +45,17 @@ class Sniffer:
     def sniff(self):
         sessions = {}
 
+        if self.packet_iterator.datalink() == pcap.DLT_EN10MB:
+            datalink_parser = dpkt.ethernet.Ethernet
+        elif self.packet_iterator.datalink() == pcap.DLT_LINUX_SLL:
+            datalink_parser = dpkt.sll.SLL
+        else:
+            logging.debug("Unknown datalink type: " + str(self.packet_iterator.datalink()))
+            datalink_parser = dpkt.ethernet.Ethernet
+
         logging.debug("<=============== Checking for Ethernet Packets ==============>")
         for ptime, pdata in self.packet_iterator:
-            ether_pkt = dpkt.ethernet.Ethernet(pdata)
+            ether_pkt = datalink_parser(pdata)
             ip_pkt = ether_pkt.data
             tcp_pkt = ip_pkt.data
             tcp_data = tcp_pkt.data
