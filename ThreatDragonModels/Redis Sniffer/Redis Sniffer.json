@@ -1,0 +1,17 @@
+{
+  "summary": {
+    "title": "Redis Sniffer",
+    "owner": "Jesse Lesperance",
+    "description": "Something"
+  },
+  "detail": {
+    "contributors": [],
+    "diagrams": [
+      {
+        "title": "Redis",
+        "thumbnail": "./public/content/images/thumbnail.jpg",
+        "id": 0
+      }
+    ]
+  }
+}
